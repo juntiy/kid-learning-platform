@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="小小学习乐园 Logo">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFD56B"/>
+      <stop offset="1" stop-color="#6EC6A8"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.38" r="0.6">
+      <stop offset="0" stop-color="#FFF6E0" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#FFF6E0" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect x="16" y="16" width="480" height="480" rx="110" fill="url(#bg)"/>
+  <rect x="16" y="16" width="480" height="480" rx="110" fill="url(#glow)"/>
+
+  <!-- 星星装饰 -->
+  <g fill="#FFFFFF" opacity="0.92">
+    <path d="M150 118 l9 20 20 3 -14 14 3 20 -18 -10 -18 10 3 -20 -14 -14 20 -3z"/>
+    <path d="M388 150 l6 14 14 2 -10 10 2 14 -12 -7 -12 7 2 -14 -10 -10 14 -2z"/>
+  </g>
+
+  <!-- 书本 -->
+  <g>
+    <rect x="298" y="252" width="156" height="112" rx="14" fill="#FFFFFF" opacity="0.96"/>
+    <line x1="376" y1="264" x2="376" y2="352" stroke="#6EC6A8" stroke-width="6"/>
+    <rect x="312" y="280" width="52" height="9" rx="4" fill="#FFB347"/>
+    <rect x="312" y="302" width="52" height="9" rx="4" fill="#FFB347" opacity="0.55"/>
+    <rect x="396" y="280" width="48" height="9" rx="4" fill="#6EC6A8"/>
+    <rect x="396" y="302" width="48" height="9" rx="4" fill="#6EC6A8" opacity="0.55"/>
+  </g>
+
+  <!-- 小鸡 -->
+  <g>
+    <ellipse cx="208" cy="300" rx="122" ry="112" fill="#FFD400"/>
+    <path d="M118 300 q-32 22 -10 64 q32 -10 42 -32z" fill="#FFC400"/>
+    <circle cx="178" cy="286" r="15" fill="#3A2E1F"/>
+    <circle cx="246" cy="286" r="15" fill="#3A2E1F"/>
+    <circle cx="183" cy="281" r="5" fill="#FFFFFF"/>
+    <circle cx="251" cy="281" r="5" fill="#FFFFFF"/>
+    <circle cx="158" cy="318" r="15" fill="#FF9AA2" opacity="0.7"/>
+    <circle cx="268" cy="318" r="15" fill="#FF9AA2" opacity="0.7"/>
+    <path d="M204 306 l32 9 -32 11z" fill="#FF8C1A"/>
+    <path d="M208 190 q-10 -32 12 -48 q5 27 20 32z" fill="#FFC400"/>
+  </g>
+
+  <text x="256" y="462" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="44" font-weight="700" fill="#FFFFFF">小小学习乐园</text>
+</svg>
