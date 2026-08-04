@@ -362,6 +362,36 @@
     .stat-row { grid-template-columns:1fr 1fr; }
     .opts { grid-template-columns:1fr; }
   }
+
+  /* ---------- 英语：听音选词 ---------- */
+  .listen-head { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; margin-bottom:6px; }
+  .listen-score { font-size:15px; font-weight:700; color:var(--teal-d); }
+  .listen-ctrls { display:flex; gap:8px; }
+  .listen-tip { font-size:15px; color:var(--ink-soft); margin:4px 0 14px; }
+  .listen-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
+  .listen-card { background:#fff; border:3px solid #ECECEC; border-radius:18px; padding:18px 10px; text-align:center; cursor:pointer; transition:transform .12s, border-color .12s, background .12s; user-select:none; }
+  .listen-card:hover { transform:translateY(-3px); border-color:var(--teal); }
+  .listen-emoji { font-size:42px; line-height:1; }
+  .listen-word { font-size:18px; font-weight:700; margin-top:8px; color:var(--ink); }
+  .listen-card.right { border-color:#22B07D; background:#E8FBF1; }
+  .listen-card.wrong { border-color:#E8584F; background:#FFEFEE; }
+  .listen-fb { margin-top:16px; min-height:26px; }
+  .fb { font-size:17px; font-weight:700; padding:8px 14px; border-radius:12px; display:inline-block; }
+  .fb.ok { color:#1B8A5F; background:#E8FBF1; }
+  .fb.no { color:#C33; background:#FFEFEE; }
+  @media (max-width:820px){ .listen-grid { grid-template-columns:repeat(2,1fr); } }
+
+  /* ---------- 拼音：基础句型跟读 ---------- */
+  .py-sent-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:14px; }
+  .py-sent { background:#fff; border:2px solid #ECECEC; border-radius:16px; padding:14px 16px; }
+  .py-sent-syls { font-size:24px; font-weight:700; color:var(--teal-d); letter-spacing:1px; }
+  .py-sent-syl { cursor:pointer; padding:0 2px; border-radius:6px; }
+  .py-sent-syl:hover { background:#F1EBFF; }
+  .py-sent-sep { color:var(--ink-soft); font-weight:400; margin:0 1px; }
+  .py-sent-zh { font-size:17px; margin:6px 0 10px; color:var(--ink); }
+  .py-sent-btns { display:flex; gap:10px; flex-wrap:wrap; }
+  .spell-play.alt { background:#F1EBFF; color:var(--teal-d); border:2px solid var(--teal); }
+  @media (max-width:820px){ .py-sent-grid { grid-template-columns:1fr; } }
 </style>
 </head>
 <body>
@@ -513,11 +543,13 @@
           <div class="mode-toggle" style="margin-left:auto">
             <button id="enLetters" class="on" onclick="setEnTab('letters')">字母卡片</button>
             <button id="enSent" onclick="setEnTab('sentences')">常用句型</button>
+            <button id="enListen" onclick="setEnTab('listen')">听音选词</button>
           </div>
         </div>
         <p class="page-sub" id="enSub">26 个字母，大小写、音标和卡通伙伴都在这里。点一点就能听发音～</p>
         <div class="letter-grid" id="abcGrid"></div>
         <div id="enSentArea" style="display:none"></div>
+        <div id="enListenArea" style="display:none"></div>
       </section>
 
       <!-- BRAIN -->
@@ -543,6 +575,11 @@
           <div class="spell-title">🧩 拼一拼（声母 + 韵母 = 音节）</div>
           <p class="spell-tip">点「拼一拼」，先听声母轻轻读、再听韵母重重读，两音相连就是正确的拼音啦！比如 波 + 啊 = ba（爸爸）。</p>
           <div class="spell-grid" id="spellGrid"></div>
+        </div>
+        <div class="spell-box" style="margin-top:18px">
+          <div class="spell-title">🗣️ 基础句型跟读（拼音）</div>
+          <p class="spell-tip">先点「听整句」听标准读音，再点「跟我读」逐字跟读，最后自己大声念出来！每个音节也能单独点听。</p>
+          <div class="py-sent-grid" id="pySentGrid"></div>
         </div>
       </section>
 
@@ -1149,6 +1186,51 @@ function renderPinyin(){
   });
 }
 
+/* ---------------- 拼音：基础句型跟读 ---------------- */
+const PY_SENTENCES = [
+  { syl:['bà','ba'], zh:'爸爸', e:'👨' },
+  { syl:['mā','ma'], zh:'妈妈', e:'👩' },
+  { syl:['wǒ','ài','bà','ba'], zh:'我爱爸爸', e:'❤️' },
+  { syl:['wǒ','ài','mā','ma'], zh:'我爱妈妈', e:'💗' },
+  { syl:['xiǎo','niǎo','fēi'], zh:'小鸟飞', e:'🐦' },
+  { syl:['huā','ér','kāi'], zh:'花儿开', e:'🌸' },
+  { syl:['xiǎo','yú','yóu'], zh:'小鱼游', e:'🐟' },
+  { syl:['wǒ','shì','hǎo','hái','zi'], zh:'我是好孩子', e:'🧒' },
+  { syl:['tài','yáng','shēng','qǐ'], zh:'太阳升起', e:'🌞' },
+  { syl:['yuè','liang','liàng'], zh:'月亮亮', e:'🌙' },
+];
+function readAlong(idx){
+  const syls = PY_SENTENCES[idx].syl;
+  if(!('speechSynthesis' in window)){ toast('当前浏览器不支持发音朗读'); return; }
+  try{
+    window.speechSynthesis.cancel();
+    const vi = pickVoice('zh-CN');
+    let i=0;
+    const step=()=>{
+      if(i>=syls.length) return;
+      const u = new SpeechSynthesisUtterance(pinyinRead(syls[i]));
+      if(vi) u.voice=vi; u.lang='zh-CN'; u.rate=0.82; u.pitch=1.05;
+      u.onend=()=>{ i++; setTimeout(step, 130); };
+      window.speechSynthesis.speak(u);
+    };
+    step();
+  }catch(e){}
+}
+function renderPYSentences(){
+  const g=$('#pySentGrid'); if(!g) return; g.innerHTML='';
+  PY_SENTENCES.forEach((s,idx)=>{
+    const sylHtml = s.syl.map(y=>`<span class="py-sent-syl" onclick="speakPY('${y}')">${y}</span>`).join('<span class="py-sent-sep">·</span>');
+    const c=document.createElement('div'); c.className='py-sent';
+    c.innerHTML=`<div class="py-sent-syls">${sylHtml}</div>
+      <div class="py-sent-zh">${s.e} ${s.zh}</div>
+      <div class="py-sent-btns">
+        <button class="spell-play" onclick="speak('${s.zh}','zh-CN')">🔊 听整句</button>
+        <button class="spell-play alt" onclick="readAlong(${idx})">🔊 跟我读</button>
+      </div>`;
+    g.appendChild(c);
+  });
+}
+
 /* ---------------- 思维训练：找规律排队（难度缓慢递增） ----------------
    难度梯度：
    第 1-4 关  -> 简单，3 选 1（两图案交替 / 三图案循环 / 数字顺数）
@@ -1327,12 +1409,17 @@ const SENTENCES = [
 function setEnTab(t){
   $('#enLetters').classList.toggle('on', t==='letters');
   $('#enSent').classList.toggle('on', t==='sentences');
+  $('#enListen').classList.toggle('on', t==='listen');
   $('#abcGrid').style.display = t==='letters' ? 'grid' : 'none';
   $('#enSentArea').style.display = t==='sentences' ? 'block' : 'none';
+  $('#enListenArea').style.display = t==='listen' ? 'block' : 'none';
   $('#enSub').textContent = t==='letters'
     ? '26 个字母，大小写、音标和卡通伙伴都在这里。注意：英语发音和拼音四声不同哦～点卡片听字母名，点单词听单词。'
-    : '学会单词，顺手就能造出好多日常短句。点句子听发音，也能自己造一句！';
+    : t==='sentences'
+      ? '学会单词，顺手就能造出好多日常短句。点句子听发音，也能自己造一句！'
+      : '👂 听一听，从下面选出你听到的单词。答对有积分，连对还有连胜火焰！';
   if(t==='sentences') renderSentences();
+  if(t==='listen') startListen();
 }
 function renderSentences(){
   const a=$('#enSentArea'); a.innerHTML='';
@@ -1357,6 +1444,68 @@ function buildSentence(base, word){
   if(!/[.!?]$/.test(sent)) sent += '.';
   speak(sent,'en-US');
   toast('你说：'+sent);
+}
+
+/* ---------------- 英语：听音选词 ---------------- */
+const LISTEN_WORDS = [
+  {w:'Apple', e:'🍎', z:'苹果'}, {w:'Bear', e:'🐻', z:'熊'}, {w:'Cat', e:'🐱', z:'猫'},
+  {w:'Dog', e:'🐶', z:'狗'}, {w:'Elephant', e:'🐘', z:'大象'}, {w:'Frog', e:'🐸', z:'青蛙'},
+  {w:'Grapes', e:'🍇', z:'葡萄'}, {w:'House', e:'🏠', z:'房子'}, {w:'Juice', e:'🧃', z:'果汁'},
+  {w:'Kite', e:'🪁', z:'风筝'}, {w:'Lion', e:'🦁', z:'狮子'}, {w:'Moon', e:'🌙', z:'月亮'},
+  {w:'Nest', e:'🪺', z:'鸟窝'}, {w:'Octopus', e:'🐙', z:'章鱼'}, {w:'Penguin', e:'🐧', z:'企鹅'},
+  {w:'Queen', e:'👑', z:'女王'}, {w:'Rainbow', e:'🌈', z:'彩虹'}, {w:'Sun', e:'☀️', z:'太阳'},
+  {w:'Tree', e:'🌳', z:'树'}, {w:'Umbrella', e:'☂️', z:'雨伞'}, {w:'Violin', e:'🎻', z:'小提琴'},
+  {w:'Watermelon', e:'🍉', z:'西瓜'}, {w:'Zebra', e:'🦓', z:'斑马'}
+];
+let listenGame = { target:null, opts:[], answered:false, picked:null, score:0, total:0, streak:0 };
+function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); const t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
+function startListen(){
+  listenGame.answered=false; listenGame.picked=null;
+  const pool = LISTEN_WORDS.slice();
+  const target = pool.splice(Math.floor(Math.random()*pool.length),1)[0];
+  const others = shuffle(pool).slice(0,3);
+  listenGame.target = target;
+  listenGame.opts = shuffle([target, ...others]);
+  renderListen();
+  setTimeout(()=>{ if(listenGame.target) speak(listenGame.target.w,'en-US'); }, 450);
+}
+function renderListen(){
+  const a=$('#enListenArea'); if(!a) return;
+  const g=listenGame;
+  const cards = g.opts.map(o=>{
+    let cls='listen-card';
+    if(g.answered){
+      if(o.w===g.target.w) cls+=' right';
+      else if(o.w===g.picked) cls+=' wrong';
+    }
+    return `<div class="${cls}" onclick="pickListen('${o.w.replace(/'/g,"\\'")}')">
+      <div class="listen-emoji">${o.e}</div><div class="listen-word">${o.w}</div></div>`;
+  }).join('');
+  const tw = g.target ? g.target.w.replace(/'/g,"\\'") : '';
+  a.innerHTML = `
+    <div class="listen-head">
+      <div class="listen-score">💯 得分 ${g.score} · 🔥 连对 ${g.streak}</div>
+      <div class="listen-ctrls">
+        <button class="btn-ghost" onclick="speak('${tw}','en-US')">🔊 再听一次</button>
+        <button class="btn-primary" onclick="startListen()">➡️ 下一题</button>
+      </div>
+    </div>
+    <p class="listen-tip">👂 仔细听，从下面 4 张卡里选出你听到的单词！</p>
+    <div class="listen-grid">${cards}</div>
+    <div class="listen-fb" id="listenFb"></div>`;
+}
+function pickListen(w){
+  const g=listenGame;
+  if(g.answered) return;
+  g.answered=true; g.picked=w; g.total+=1;
+  if(w===g.target.w){
+    g.score+=5; g.streak+=1; addExp(5);
+    $('#listenFb').innerHTML=`<span class="fb ok">🎉 答对啦！+5 积分</span>`;
+  } else {
+    g.streak=0;
+    $('#listenFb').innerHTML=`<span class="fb no">再想想～正确答案：${g.target.w}（${g.target.z} ${g.target.e}）</span>`;
+  }
+  renderListen();
 }
 
 /* ---------------- 家长管理端 ---------------- */
@@ -1646,7 +1795,7 @@ function showScreen(name){
   if(name==='study') startStudy();
   if(name==='abc') renderABC();
   if(name==='brain') enterBrain();
-  if(name==='pinyin'){ renderPinyinTabs(); renderPinyin(); renderSpell();
+  if(name==='pinyin'){ renderPinyinTabs(); renderPinyin(); renderSpell(); renderPYSentences();
     if(!zhWarned && !hasZhVoice()){ zhWarned=true; setTimeout(()=>toast('提示：若听不到正确中文发音，请在系统设置里安装中文语音包（如微软晓妍/普通话）'),400); }
   }
   if(name==='parent') renderParent();
