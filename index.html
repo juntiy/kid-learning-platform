@@ -392,6 +392,14 @@
   .py-sent-btns { display:flex; gap:10px; flex-wrap:wrap; }
   .spell-play.alt { background:#F1EBFF; color:var(--teal-d); border:2px solid var(--teal); }
   @media (max-width:820px){ .py-sent-grid { grid-template-columns:1fr; } }
+  /* ---------- 习惯图标预设点选 ---------- */
+  .icon-pick { display:flex; flex-wrap:wrap; gap:8px; margin-top:6px; }
+  .icon-pick .chip { font-size:24px; width:46px; height:46px; line-height:46px; text-align:center; background:#fff; border:2px solid #EAF6F2; border-radius:12px; cursor:pointer; transition:transform .12s, border-color .12s, box-shadow .12s; user-select:none; }
+  .icon-pick .chip:hover { transform:translateY(-2px); }
+  .icon-pick .chip.on { border-color:var(--pink); box-shadow:0 0 0 3px rgba(255,143,171,.25); background:#FFF0F5; }
+  .icon-pick-custom { display:flex; align-items:center; gap:8px; margin-top:10px; }
+  .icon-pick-custom label { font-size:13px; color:var(--ink-soft); font-family:'Baloo 2',sans-serif; font-weight:600; }
+  .icon-pick-custom input { width:64px; text-align:center; font-size:20px; }
 </style>
 </head>
 <body>
@@ -636,6 +644,9 @@ const defaultState = {
 let S = load();
 if(!S.pet) S.pet = structuredClone(defaultState).pet;
 if(!S.pet.type) S.pet.type='chick';
+/* 习惯打卡预设图标（适合小学生日常习惯） */
+const HABIT_ICONS = ['💧','🦷','🛏️','📚','🏃','🥗','✋','🧹','🎒','🐶','🧘','💊','🌿','✏️','🎵','🚿','🤝','🌞','🍎','⚽','🧦','💤','📝','🌟','❤️','🔥','👟','🧼'];
+let selHabitIcon = '🌟';
 function load(){
   try { const r = localStorage.getItem(SAVE_KEY); if(r) return Object.assign(structuredClone(defaultState), JSON.parse(r)); } catch(e){}
   return structuredClone(defaultState);
@@ -1668,9 +1679,13 @@ function habitsHTML(){
     <h3 style="margin-top:0">⭐ 自定义习惯 / 打卡</h3>
     <p style="font-size:13px;color:var(--ink-soft);margin-top:0">添加孩子要打卡的习惯，设置积分奖励。保存后会出现在孩子端的「习惯打卡」里。</p>
     <div class="form-grid">
-      <label>图标(emoji)<input id="hIcon" placeholder="🌟" maxlength="2"></label>
       <label>习惯名称<input id="hName" placeholder="比如：每天喝水"></label>
       <label>积分奖励<input id="hPoints" type="number" value="50" min="0"></label>
+    </div>
+    <label style="display:block;margin-top:12px;font-size:13px;color:var(--ink-soft);font-family:'Baloo 2';font-weight:600">选个图标</label>
+    <div class="icon-pick" id="habitIconPick"></div>
+    <div class="icon-pick-custom">
+      <label>或自定义</label><input id="hIcon" placeholder="🌟" maxlength="2">
     </div>
     <label style="display:block;margin-top:12px;font-size:13px;color:var(--ink-soft);font-family:'Baloo 2';font-weight:600">描述（可选）</label>
     <textarea class="field" id="hDesc" rows="2" placeholder="比如：每天喝 5 杯水"></textarea>
@@ -1682,6 +1697,15 @@ function habitsHTML(){
   </div>`;
 }
 function wireHabits(){
+  const pick=$('#habitIconPick'); if(pick){
+    pick.innerHTML='';
+    HABIT_ICONS.forEach(ic=>{
+      const b=document.createElement('div'); b.className='chip'+(ic===selHabitIcon?' on':'');
+      b.textContent=ic; b.title=ic;
+      b.onclick=()=>{ selHabitIcon=ic; $('#hIcon').value=''; Array.from(pick.children).forEach(c=>c.classList.remove('on')); b.classList.add('on'); };
+      pick.appendChild(b);
+    });
+  }
   const list=$('#hList'); list.innerHTML='';
   if(S.habits.length===0){ list.innerHTML=`<div class="empty" style="padding:14px">还没有习惯，快添加一个吧～</div>`; }
   S.habits.forEach((h,i)=>{
@@ -1692,7 +1716,8 @@ function wireHabits(){
   $('#hCount').textContent=S.habits.length;
 }
 function addHabit(){
-  const icon=$('#hIcon').value.trim()||'🌟';
+  const custom=$('#hIcon').value.trim();
+  const icon=custom || selHabitIcon || '🌟';
   const name=$('#hName').value.trim();
   const points=parseInt($('#hPoints').value)||50;
   const desc=$('#hDesc').value.trim()||'好习惯，要坚持';
