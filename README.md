@@ -119,13 +119,12 @@ npm run preview  # 本地预览打包结果
 
 <div align="center">
 
-<img src="assets/wechat.svg" alt="微信打赏" width="200"/>
+<img src="assets/wechat.png" alt="微信打赏" width="200"/>
 &nbsp;&nbsp;&nbsp;
-<img src="assets/alipay.svg" alt="支付宝打赏" width="200"/>
+<img src="assets/alipay.png" alt="支付宝打赏" width="200"/>
 
 </div>
 
-> 📌 上图为占位图。**替换为你的收款码**：把自己的微信 / 支付宝收款码截图导出为图片，重命名为 `wechat.png` / `alipay.png` 放入 `assets/`，然后把 README 中对应 `<img src="assets/wechat.svg">` 改成 `<img src="assets/wechat.png">` 即可。
 
 ## 📜 License
 
