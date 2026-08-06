@@ -244,6 +244,13 @@
   .goal-fill { height:100%; background:linear-gradient(90deg,var(--orange),var(--yellow)); transition:width .5s; }
   .goal-card.month .goal-fill { background:linear-gradient(90deg,var(--blue),var(--purple)); }
   .goal-stat { font-size:14px; margin-top:6px; color:var(--teal-d); font-weight:700; }
+  .goal-card.goal-reached { border-color:#6EE7B3; background:linear-gradient(135deg,#ECFDF5,#D1FAE5); }
+  .goal-card.goal-reached .goal-t { color:#059669; }
+  .goal-rw { color:#E85D04; font-size:17px; }
+  .goal-stat-row { display:flex; align-items:center; gap:10px; margin-top:6px; }
+  .goal-pct { font-size:26px; font-weight:900; color:var(--orange); font-family:'Baloo 2',sans-serif; min-width:56px; text-align:center; background:linear-gradient(135deg,#FFF7E6,#FFE9D6); border-radius:10px; padding:2px 8px; border:2px solid #FFDAB3; }
+  .goal-card.goal-reached .goal-pct { color:#059669; background:linear-gradient(135deg,#ECFDF5,#D1FAE5); border-color:#6EE7B3; }
+  .goal-thresh-mark { font-size:12px; color:var(--ink-soft); margin-top:4px; padding:3px 10px; background:rgba(0,0,0,.04); border-radius:8px; display:inline-block; }
   /* --- Habit Plan Table (week view) --- */
   .hpt-wrap { margin-top:4px; }
   .hpt-title { text-align:center; font-size:20px; font-weight:800; color:var(--pink); font-family:'Baloo 2',cursive,sans-serif; margin-bottom:10px; letter-spacing:1px; }
@@ -698,7 +705,7 @@ const defaultState = {
     { id:'h3', icon:'🏃', name:'户外运动', desc:'跳绳 / 跑步 20 分钟', records:{}, slot:'afternoon' },
     { id:'h4', icon:'🧹', name:'整理书桌', desc:'自己收拾学习角', records:{}, slot:'evening' },
   ],
-  goals: { weekly:{target:0,reward:'',points:0}, monthly:{target:0,reward:'',points:0} },
+  goals: { weekly:{target:0,reward:'',points:0,threshold:100}, monthly:{target:0,reward:'',points:0,threshold:100} },
   tasks: [
     { id:'t1', ico:'🔤', name:'英语字母复习', due:'今天到期', done:false, target:'study' },
     { id:'t2', ico:'➕', name:'口算 10 以内', due:'今天到期', done:false, target:'study' },
@@ -725,7 +732,7 @@ const defaultState = {
 let S = load();
 if(!S.pet) S.pet = structuredClone(defaultState).pet;
 if(!S.pet.type) S.pet.type='chick';
-if(!S.goals) S.goals = { weekly:{target:0,reward:'',points:0}, monthly:{target:0,reward:'',points:0} };
+if(!S.goals) S.goals = { weekly:{target:0,reward:'',points:0,threshold:100}, monthly:{target:0,reward:'',points:0,threshold:100} };
 S.habits.forEach(h=>{ if(!h.records) h.records={}; if(!h.slot) h.slot='morning'; });
 /* 习惯打卡预设图标（适合小学生日常习惯） */
 const HABIT_ICONS = ['💧','🦷','🛏️','📚','🏃','🥗','✋','🧹','🎒','🐶','🧘','💊','🌿','✏️','🎵','🚿','🤝','🌞','🍎','⚽','🧦','💤','📝','🌟','❤️','🔥','👟','🧼'];
@@ -1112,15 +1119,22 @@ function renderHabitToday(){
 }
 function goalCard(g, emoji, label){
   const done = label==='week' ? window.__habitDoneCache : window.__habitDoneCache;
+  const totalPossible = (S.habits||[]).length * (label==='week'?7:30); /* rough max */
   const pct = g.target ? Math.min(100, Math.round(done/g.target*100)) : 0;
-  const reached = g.target && done>=g.target;
-  return `<div class="goal-card${label==='month'?' month':''}">
+  const thresh = g.threshold || 100;
+  const reached = g.target && pct >= thresh;
+  const rewardText = g.reward ? escapeHtml(g.reward) : '';
+  return `<div class="goal-card${label==='month'?' month':''}${reached?' goal-reached':''}">
     <div class="goal-ico">${emoji}</div>
     <div class="goal-body">
-      <div class="goal-t">${label==='week'?'本周':'本月'}奖励${g.reward?('：'+escapeHtml(g.reward)):''}</div>
-      <div class="goal-sub">目标：完成 ${g.target||0} 次打卡${g.points?(' ＋ '+g.points+' 积分'):''}</div>
+      <div class="goal-t">${label==='week'?'本周':'本月'}奖励${rewardText?'：<span class="goal-rw">'+rewardText+'</span>':''}</div>
+      <div class="goal-sub">目标：完成 ${g.target||0} 次打卡${g.points?(' ＋ '+g.points+' 积分'):''} · 达成阈值 ${thresh}%</div>
       <div class="goal-bar"><div class="goal-fill" style="width:${pct}%"></div></div>
-      <div class="goal-stat">${reached?'🎉 已达成，奖励到手！':('已完成 '+done+' / '+(g.target||0)+' 次')}</div>
+      <div class="goal-stat-row">
+        <span class="goal-pct">${pct}%</span>
+        <span class="goal-stat">${reached?'🎉 已达成！奖励到手！':('已完成 '+done+' / '+(g.target||0)+' 次')}</span>
+      </div>
+      ${g.target?`<div class="goal-thresh-mark">${pct>=thresh?'✅':'⏳'} 需要 ${thresh}% 才能获得奖励</div>`:''}
     </div></div>`;
 }
 function renderHabitWeek(){
@@ -1170,16 +1184,21 @@ function renderHabitWeek(){
   }
   // Summary row
   html += `<div class="hpt-row hpt-sum">
-    <div class="hpt-cell hpt-name"><span class="hpt-nm" style="color:var(--pink);font-weight:700">本周完成</span></div>`;
+    <div class="hpt-cell hpt-name"><span class="hpt-nm" style="color:var(--pink);font-weight:700">📊 完成率</span></div>`;
+  let weekOk=0, weekTotalPossible=0;
   days.forEach((d, i) => {
     const k = keyOf(d);
     const cnt = doneHabitsOn(k).length;
     const total = S.habits.length;
+    const rate = total ? Math.round(cnt/total*100) : 0;
+    weekOk+=cnt; weekTotalPossible+=total;
     const isTodayCol = i === todayIdx;
-    html += `<div class="hpt-cell hpt-check${isTodayCol?' hpt-today-col':''}" style="justify-content:center"><span style="font-size:12px;color:var(--ink-soft);font-weight:700">${cnt}/${total}</span></div>`;
+    const rateClr = rate>=100?'#059669':rate>=80?'#E85D04':'#8A8398';
+    html += `<div class="hpt-cell hpt-check${isTodayCol?' hpt-today-col':''}" style="justify-content:center;flex-direction:column;gap:2px"><span style="font-size:12px;color:var(--ink-soft);font-weight:700">${cnt}/${total}</span><span style="font-size:11px;font-weight:800;color:${rateClr}">${rate}%</span></div>`;
   });
-  const weekTotal = countDoneInRange(days);
-  html += `<div class="hpt-cell hpt-op"><span style="font-size:13px;color:var(--teal-d);font-weight:700">${weekTotal}次</span></div></div>`;
+  const weekRate = weekTotalPossible ? Math.round(weekOk/weekTotalPossible*100) : 0;
+  const wRateClr = weekRate>=100?'#059669':weekRate>=80?'#E85D04':'#8A8398';
+  html += `<div class="hpt-cell hpt-op" style="flex-direction:column;align-items:center;gap:2px"><span style="font-size:13px;color:var(--teal-d);font-weight:700">${weekOk}次</span><span style="font-size:14px;font-weight:900;color:${wRateClr}">${weekRate}%</span></div></div>`;
   html += `</div></div>`;
   w.innerHTML = html;
 }
@@ -1239,7 +1258,10 @@ function renderHabitMine(){
     slotPick.appendChild(b); });
   const list=document.getElementById('cHList'); list.innerHTML='';
   if(S.habits.length===0){ list.innerHTML='<div class="empty" style="padding:14px">还没有习惯，快添加一个吧～</div>'; }
-  S.habits.forEach(h=>{
+  /* 按时间段从早到晚排列 */
+  const slotOrder = HABIT_SLOTS.map(s=>s.key);
+  const sortedHabits = [...S.habits].sort((a,b)=>(slotOrder.indexOf(a.slot||'morning')-slotOrder.indexOf(b.slot||'morning')));
+  sortedHabits.forEach(h=>{
     const d=document.createElement('div'); d.className='cq-item';
     d.innerHTML=`<span style="font-size:22px">${h.icon}</span><span style="flex:1">${h.name} <span style="color:var(--ink-soft)">+${h.points||50}分</span></span><button class="del" onclick="editHabitChild('${h.id}')">编辑</button><button class="del" onclick="delHabitChild('${h.id}')">删除</button>`;
     list.appendChild(d);
@@ -1253,6 +1275,7 @@ function addHabitChild(){
   const points=parseInt(document.getElementById('cHPoints').value)||50;
   const desc=document.getElementById('cHDesc').value.trim()||'好习惯，要坚持';
   if(!name){ toast('请填写习惯名称'); return; }
+  if(!selHabitSlot){ toast('请选择时间段（早上/中午/下午/晚上）'); return; }
   if(editingHabitId){
     const h=S.habits.find(x=>x.id===editingHabitId);
     if(h){ h.icon=icon; h.name=name; h.points=points; h.desc=desc; h.slot=selHabitSlot; }
@@ -2001,11 +2024,15 @@ function habitsHTML(){
     </div>
     <div class="form-grid">
       <label>每周奖励积分<input id="wPoints" type="number" min="0" value="0"></label>
-      <label>每月目标次数<input id="mTarget" type="number" min="0" value="0"></label>
+      <label>达成阈值（完成率）<select id="wThreshold"><option value="100">100%（全部完成才给奖励）</option><option value="90">90%</option><option value="80">80%</option></select></label>
     </div>
     <div class="form-grid">
+      <label>每月目标次数<input id="mTarget" type="number" min="0" value="0"></label>
       <label>每月奖励说明<input id="mReward" placeholder="比如：买一本喜欢的绘本"></label>
+    </div>
+    <div class="form-grid">
       <label>每月奖励积分<input id="mPoints" type="number" min="0" value="0"></label>
+      <label>达成阈值（完成率）<select id="mThreshold"><option value="100">100%（全部完成才给奖励）</option><option value="90">90%</option><option value="80">80%</option></select></label>
     </div>
     <button class="btn-primary" style="margin-top:14px" onclick="saveGoals()">保存奖励设置</button>
   </div>
@@ -2026,8 +2053,8 @@ function wireHabits(){
   }
   if($('#wTarget')){
     $('#wTarget').value=S.goals.weekly.target||0; $('#wReward').value=S.goals.weekly.reward||'';
-    $('#wPoints').value=S.goals.weekly.points||0; $('#mTarget').value=S.goals.monthly.target||0;
-    $('#mReward').value=S.goals.monthly.reward||''; $('#mPoints').value=S.goals.monthly.points||0;
+    $('#wPoints').value=S.goals.weekly.points||0; $('#wThreshold').value=S.goals.weekly.threshold||100;
+    $('#mTarget').value=S.goals.monthly.target||0; $('#mReward').value=S.goals.monthly.reward||''; $('#mPoints').value=S.goals.monthly.points||0; $('#mThreshold').value=S.goals.monthly.threshold||100;
   }
   const list=$('#hList'); list.innerHTML='';
   if(S.habits.length===0){ list.innerHTML=`<div class="empty" style="padding:14px">还没有习惯，快添加一个吧～</div>`; }
@@ -2054,8 +2081,8 @@ function addHabit(){
 }
 function delHabit(i){ S.habits.splice(i,1); save(); renderParent(); }
 function saveGoals(){
-  S.goals.weekly = { target:parseInt($('#wTarget').value)||0, reward:$('#wReward').value.trim(), points:parseInt($('#wPoints').value)||0 };
-  S.goals.monthly = { target:parseInt($('#mTarget').value)||0, reward:$('#mReward').value.trim(), points:parseInt($('#mPoints').value)||0 };
+  S.goals.weekly = { target:parseInt($('#wTarget').value)||0, reward:$('#wReward').value.trim(), points:parseInt($('#wPoints').value)||0, threshold:parseInt($('#wThreshold').value)||100 };
+  S.goals.monthly = { target:parseInt($('#mTarget').value)||0, reward:$('#mReward').value.trim(), points:parseInt($('#mPoints').value)||0, threshold:parseInt($('#mThreshold').value)||100 };
   save(); renderParent(); toast('奖励设置已保存 🎁');
 }
 
