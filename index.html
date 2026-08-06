@@ -244,15 +244,38 @@
   .goal-fill { height:100%; background:linear-gradient(90deg,var(--orange),var(--yellow)); transition:width .5s; }
   .goal-card.month .goal-fill { background:linear-gradient(90deg,var(--blue),var(--purple)); }
   .goal-stat { font-size:14px; margin-top:6px; color:var(--teal-d); font-weight:700; }
-  .cal-week { display:grid; grid-template-columns:repeat(7,1fr); gap:8px; }
-  .cal-day { background:#fff; border-radius:16px; padding:10px 4px; text-align:center; box-shadow:var(--shadow-sm); border:3px solid #EAF6F2; }
-  .cal-day.today { border-color:var(--orange); background:#FFF7EC; }
-  .cd-dow { font-size:13px; color:var(--teal-d); font-weight:700; }
-  .cd-date { font-size:12px; color:var(--ink-soft); font-family:'Baloo 2',sans-serif; font-weight:600; margin-bottom:6px; }
-  .cd-icos { font-size:20px; min-height:24px; line-height:1.2; word-break:break-all; }
-  .cd-rest { font-size:12px; color:#C9C2D6; }
-  .cd-num { font-size:12px; color:var(--ink-soft); margin-top:4px; font-family:'Baloo 2',sans-serif; font-weight:600; }
-  .cal-hint { font-size:13px; color:var(--ink-soft); font-family:'Baloo 2',sans-serif; font-weight:600; margin-top:12px; text-align:center; }
+  /* --- Habit Plan Table (week view) --- */
+  .hpt-wrap { margin-top:4px; }
+  .hpt-title { text-align:center; font-size:20px; font-weight:800; color:var(--pink); font-family:'Baloo 2',cursive,sans-serif; margin-bottom:10px; letter-spacing:1px; }
+  .hpt-table { background:#fff; border:3px solid #FFBFDC; border-radius:16px; overflow:hidden; box-shadow:var(--shadow-sm); }
+  .hpt-head { display:flex; background:linear-gradient(135deg,#FFF0F7,#FFE4F0); border-bottom:2px solid #FFBFDC; }
+  .hpt-th { flex:1; min-width:0; padding:10px 4px; text-align:center; font-size:14px; font-weight:800; color:var(--pink); font-family:'Baloo 2',sans-serif; }
+  .hpt-th.hpt-th-name { flex:2; min-width:100px; text-align:left; padding-left:14px; }
+  .hpt-th.hpt-th-op { flex:0 0 60px; min-width:60px; }
+  .hpt-th.hpt-today { background:rgba(255,179,86,.18); border-radius:8px 8px 0 0; }
+  .hpt-row { display:flex; border-bottom:1px solid #FFD4E5; align-items:stretch; min-height:48px; transition:background .15s; }
+  .hpt-row:last-child { border-bottom:none; }
+  .hpt-row:hover { background:#FFFAFB; }
+  .hpt-row.hpt-sum { background:linear-gradient(135deg,#FFF7FF,#F9F0FF); border-top:2px dashed #E8C8E0; font-weight:700; }
+  .hpt-cell { flex:1; min-width:0; display:flex; align-items:center; justify-content:center; padding:6px 2px; border-right:1px solid #FFE4EE; }
+  .hpt-cell:last-child { border-right:none; }
+  /* Name cell */
+  .hpt-cell.hpt-name { flex:2; min-width:100px; padding:8px 10px; gap:8px; justify-content:flex-start; }
+  .hpt-ico { font-size:22px; flex-shrink:0; }
+  .hpt-nm { font-size:14px; font-weight:600; color:var(--ink); white-space:nowrap; overflow:hidden;text-overflow:ellipsis; }
+  /* Check cell */
+  .hpt-cell.hpt-check { font-size:20px; }
+  .hpt-ok { font-size:20px; }
+  .hpt-pend { font-size:16px; opacity:.7; }
+  .hpt-cell.hpt-today-col { background:rgba(255,220,140,.12); }
+  /* Op cell */
+  .hpt-cell.hpt-op { flex:0 0 60px; min-width:60px; border-right:none; }
+  .hpt-btn { background:var(--pink); color:#fff; border:none; border-radius:10px; padding:5px 12px; font-size:13px; font-family:'Baloo 2',sans-serif; font-weight:700; cursor:pointer; transition:transform .1s,box-shadow .1s; }
+  .hpt-btn:hover { transform:scale(1.06); box-shadow:0 3px 10px rgba(232,96,144,.35); }
+  .hpt-btn:active { transform:scale(.96); }
+  .hpt-done { font-size:16px; }
+  .hpt-wait { font-size:11px; color:var(--orange); font-weight:700; }
+  .hpt-empty { padding:30px 14px; text-align:center; color:var(--ink-soft); font-size:14px; }
   .cal-month { background:#fff; border-radius:22px; padding:14px; box-shadow:var(--shadow-sm); border:3px solid #EAF6F2; margin-bottom:14px; }
   .cm-head { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; margin-bottom:8px; }
   .cm-head span { text-align:center; font-size:13px; color:var(--teal-d); font-weight:700; }
@@ -1089,20 +1112,52 @@ function renderHabitWeek(){
   const w=$('#habitWeek'); const days=weekDays(new Date());
   window.__habitDoneCache = countDoneInRange(days);
   let html = goalCard(S.goals.weekly, '🎁', 'week');
-  html += '<div class="cal-week">';
-  days.forEach(d=>{
-    const k=keyOf(d); const list=doneHabitsOn(k);
-    const dow=WEEK_CN[(d.getDay()+6)%7];
-    const isToday = keyOf(d)===todayKey();
-    html += `<div class="cal-day${isToday?' today':''}">
-      <div class="cd-dow">周${dow}</div>
-      <div class="cd-date">${d.getMonth()+1}/${d.getDate()}</div>
-      <div class="cd-icos">${list.length?list.map(h=>h.icon).join(''):'<span class="cd-rest">休息</span>'}</div>
-      <div class="cd-num">${list.length?list.length+' 个':'—'}</div>
-    </div>`;
+  // ---- Table-style habit plan ----
+  const todayIdx = days.findIndex(d => keyOf(d)===todayKey());
+  html += `<div class="hpt-wrap">
+    <div class="hpt-title">📋 本周习惯计划表</div>
+    <div class="hpt-table">
+      <div class="hpt-head">
+        <div class="hpt-th hpt-th-name">习惯</div>${days.map((d,i)=>`<div class="hpt-th${i===todayIdx?' hpt-today':''}">${d.getDate()}</div>`).join('')}
+        <div class="hpt-th hpt-th-op">操作</div>
+      </div>`;
+  if(S.habits.length===0){
+    html += `<div class="hpt-empty"><span>还没有习惯，去「⭐ 我的」添加吧～</span></div>`;
+  } else {
+    S.habits.forEach(h => {
+      html += `<div class="hpt-row">
+        <div class="hpt-cell hpt-name"><span class="hpt-ico">${escapeHtml(h.icon)}</span><span class="hpt-nm">${escapeHtml(h.name)}</span></div>`;
+      days.forEach((d, i) => {
+        const k = keyOf(d);
+        const rec = habitRec(h, k);
+        const isTodayCol = i === todayIdx;
+        if(rec==='ok') html += `<div class="hpt-cell hpt-check${isTodayCol?' hpt-today-col':''}"><span class="hpt-ok">👍</span></div>`;
+        else if(rec==='pending') html += `<div class="hpt-cell hpt-check${isTodayCol?' hpt-today-col':''}"><span class="hpt-pend">⏳</span></div>`;
+        else html += `<div class="hpt-cell hpt-check${isTodayCol?' hpt-today-col':''}"></div>`;
+      });
+      // Action column
+      const tk = todayKey();
+      const tRec = habitRec(h, tk);
+      let action = '';
+      if(tRec==='ok') action = '<span class="hpt-done">✅</span>';
+      else if(tRec==='pending') action = '<span class="hpt-wait">待确认</span>';
+      else action = `<button class="hpt-btn" onclick="applyHabit('${h.id}')">打卡</button>`;
+      html += `<div class="hpt-cell hpt-op">${action}</div></div>`;
+    });
+  }
+  // Summary row
+  html += `<div class="hpt-row hpt-sum">
+    <div class="hpt-cell hpt-name"><span class="hpt-nm" style="color:var(--pink);font-weight:700">本周完成</span></div>`;
+  days.forEach((d, i) => {
+    const k = keyOf(d);
+    const cnt = doneHabitsOn(k).length;
+    const total = S.habits.length;
+    const isTodayCol = i === todayIdx;
+    html += `<div class="hpt-cell hpt-check${isTodayCol?' hpt-today-col':''}" style="justify-content:center"><span style="font-size:12px;color:var(--ink-soft);font-weight:700">${cnt}/${total}</span></div>`;
   });
-  html += '</div>';
-  html += '<div class="cal-hint">👆 点「📅 今日」给习惯打卡，这里就能看到每天完成了哪些～</div>';
+  const weekTotal = countDoneInRange(days);
+  html += `<div class="hpt-cell hpt-op"><span style="font-size:13px;color:var(--teal-d);font-weight:700">${weekTotal}次</span></div></div>`;
+  html += `</div></div>`;
   w.innerHTML = html;
 }
 function renderHabitMonth(){
