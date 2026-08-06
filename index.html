@@ -276,6 +276,14 @@
   .hpt-done { font-size:16px; }
   .hpt-wait { font-size:11px; color:var(--orange); font-weight:700; }
   .hpt-empty { padding:30px 14px; text-align:center; color:var(--ink-soft); font-size:14px; }
+  .hpt-head.hpt-subhead { background:linear-gradient(135deg,#FFF7FB,#FFF0F7); border-bottom:2px solid #FFBFDC; }
+  .hpt-head.hpt-subhead .hpt-th { font-size:12px; padding:6px 4px; color:#C8618F; }
+  .hpt-grouprow { display:flex; background:linear-gradient(135deg,#FFF0F7,#FFE4F0); border-top:2px solid #FFBFDC; border-bottom:2px solid #FFD4E5; }
+  .hpt-group-cell { flex:1; padding:7px 10px; font-size:14px; font-weight:800; color:var(--pink); font-family:'Baloo 2',sans-serif; }
+  .slot-pick { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
+  .slot-chip { background:#F3F5FB; border:2px solid transparent; border-radius:12px; padding:6px 12px; font-size:13px; font-family:'Baloo 2',sans-serif; font-weight:600; color:var(--ink-soft); cursor:pointer; transition:all .12s; }
+  .slot-chip:hover { background:#EAEFF9; }
+  .slot-chip.on { background:var(--pink); color:#fff; border-color:var(--pink); }
   .cal-month { background:#fff; border-radius:22px; padding:14px; box-shadow:var(--shadow-sm); border:3px solid #EAF6F2; margin-bottom:14px; }
   .cm-head { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; margin-bottom:8px; }
   .cm-head span { text-align:center; font-size:13px; color:var(--teal-d); font-weight:700; }
@@ -685,10 +693,10 @@ const defaultState = {
   pet: { name:'豆豆', type:'chick', level:3, exp:45, expMax:100, satiety:70 },
   streak: 5,
   habits: [
-    { id:'h1', icon:'🌅', name:'早起刷牙', desc:'每天 7:30 前起床', records:{} },
-    { id:'h2', icon:'📖', name:'亲子阅读', desc:'读 15 分钟课外书', records:{} },
-    { id:'h3', icon:'🏃', name:'户外运动', desc:'跳绳 / 跑步 20 分钟', records:{} },
-    { id:'h4', icon:'🧹', name:'整理书桌', desc:'自己收拾学习角', records:{} },
+    { id:'h1', icon:'🌅', name:'早起刷牙', desc:'每天 7:30 前起床', records:{}, slot:'morning' },
+    { id:'h2', icon:'📖', name:'亲子阅读', desc:'读 15 分钟课外书', records:{}, slot:'evening' },
+    { id:'h3', icon:'🏃', name:'户外运动', desc:'跳绳 / 跑步 20 分钟', records:{}, slot:'afternoon' },
+    { id:'h4', icon:'🧹', name:'整理书桌', desc:'自己收拾学习角', records:{}, slot:'evening' },
   ],
   goals: { weekly:{target:0,reward:'',points:0}, monthly:{target:0,reward:'',points:0} },
   tasks: [
@@ -718,10 +726,17 @@ let S = load();
 if(!S.pet) S.pet = structuredClone(defaultState).pet;
 if(!S.pet.type) S.pet.type='chick';
 if(!S.goals) S.goals = { weekly:{target:0,reward:'',points:0}, monthly:{target:0,reward:'',points:0} };
-S.habits.forEach(h=>{ if(!h.records) h.records={}; });
+S.habits.forEach(h=>{ if(!h.records) h.records={}; if(!h.slot) h.slot='morning'; });
 /* 习惯打卡预设图标（适合小学生日常习惯） */
 const HABIT_ICONS = ['💧','🦷','🛏️','📚','🏃','🥗','✋','🧹','🎒','🐶','🧘','💊','🌿','✏️','🎵','🚿','🤝','🌞','🍎','⚽','🧦','💤','📝','🌟','❤️','🔥','👟','🧼'];
+const HABIT_SLOTS = [
+  { key:'morning',    ico:'🌅', label:'早上 / 上午' },
+  { key:'noon',       ico:'🍱', label:'中午' },
+  { key:'afternoon',  ico:'🌞', label:'下午' },
+  { key:'evening',    ico:'🌙', label:'晚上' },
+];
 let selHabitIcon = '🌟';
+let selHabitSlot = 'morning';
 function load(){
   try { const r = localStorage.getItem(SAVE_KEY); if(r) return Object.assign(structuredClone(defaultState), JSON.parse(r)); } catch(e){}
   return structuredClone(defaultState);
@@ -1112,7 +1127,7 @@ function renderHabitWeek(){
   const w=$('#habitWeek'); const days=weekDays(new Date());
   window.__habitDoneCache = countDoneInRange(days);
   let html = goalCard(S.goals.weekly, '🎁', 'week');
-  // ---- Table-style habit plan ----
+  // ---- Table-style habit plan with weekday row + time-slot groups ----
   const todayIdx = days.findIndex(d => keyOf(d)===todayKey());
   html += `<div class="hpt-wrap">
     <div class="hpt-title">📋 本周习惯计划表</div>
@@ -1120,29 +1135,37 @@ function renderHabitWeek(){
       <div class="hpt-head">
         <div class="hpt-th hpt-th-name">习惯</div>${days.map((d,i)=>`<div class="hpt-th${i===todayIdx?' hpt-today':''}">${d.getDate()}</div>`).join('')}
         <div class="hpt-th hpt-th-op">操作</div>
+      </div>
+      <div class="hpt-head hpt-subhead">
+        <div class="hpt-th hpt-th-name">时间段</div>${days.map((d,i)=>{ const dow=WEEK_CN[(d.getDay()+6)%7]; return `<div class="hpt-th${i===todayIdx?' hpt-today':''}">周${dow}</div>`; }).join('')}
+        <div class="hpt-th hpt-th-op">打卡</div>
       </div>`;
   if(S.habits.length===0){
     html += `<div class="hpt-empty"><span>还没有习惯，去「⭐ 我的」添加吧～</span></div>`;
   } else {
-    S.habits.forEach(h => {
-      html += `<div class="hpt-row">
-        <div class="hpt-cell hpt-name"><span class="hpt-ico">${escapeHtml(h.icon)}</span><span class="hpt-nm">${escapeHtml(h.name)}</span></div>`;
-      days.forEach((d, i) => {
-        const k = keyOf(d);
-        const rec = habitRec(h, k);
-        const isTodayCol = i === todayIdx;
-        if(rec==='ok') html += `<div class="hpt-cell hpt-check${isTodayCol?' hpt-today-col':''}"><span class="hpt-ok">👍</span></div>`;
-        else if(rec==='pending') html += `<div class="hpt-cell hpt-check${isTodayCol?' hpt-today-col':''}"><span class="hpt-pend">⏳</span></div>`;
-        else html += `<div class="hpt-cell hpt-check${isTodayCol?' hpt-today-col':''}"></div>`;
+    HABIT_SLOTS.forEach(slot=>{
+      const hs = S.habits.filter(h=>h.slot===slot.key);
+      if(hs.length===0) return;
+      html += `<div class="hpt-grouprow"><div class="hpt-group-cell">${slot.ico} ${escapeHtml(slot.label)}</div></div>`;
+      hs.forEach(h => {
+        html += `<div class="hpt-row">
+          <div class="hpt-cell hpt-name"><span class="hpt-ico">${escapeHtml(h.icon)}</span><span class="hpt-nm">${escapeHtml(h.name)}</span></div>`;
+        days.forEach((d, i) => {
+          const k = keyOf(d);
+          const rec = habitRec(h, k);
+          const isTodayCol = i === todayIdx;
+          if(rec==='ok') html += `<div class="hpt-cell hpt-check${isTodayCol?' hpt-today-col':''}"><span class="hpt-ok">👍</span></div>`;
+          else if(rec==='pending') html += `<div class="hpt-cell hpt-check${isTodayCol?' hpt-today-col':''}"><span class="hpt-pend">⏳</span></div>`;
+          else html += `<div class="hpt-cell hpt-check${isTodayCol?' hpt-today-col':''}"></div>`;
+        });
+        const tk = todayKey();
+        const tRec = habitRec(h, tk);
+        let action = '';
+        if(tRec==='ok') action = '<span class="hpt-done">✅</span>';
+        else if(tRec==='pending') action = '<span class="hpt-wait">待确认</span>';
+        else action = `<button class="hpt-btn" onclick="applyHabit('${h.id}')">打卡</button>`;
+        html += `<div class="hpt-cell hpt-op">${action}</div></div>`;
       });
-      // Action column
-      const tk = todayKey();
-      const tRec = habitRec(h, tk);
-      let action = '';
-      if(tRec==='ok') action = '<span class="hpt-done">✅</span>';
-      else if(tRec==='pending') action = '<span class="hpt-wait">待确认</span>';
-      else action = `<button class="hpt-btn" onclick="applyHabit('${h.id}')">打卡</button>`;
-      html += `<div class="hpt-cell hpt-op">${action}</div></div>`;
     });
   }
   // Summary row
@@ -1192,6 +1215,8 @@ function renderHabitMine(){
       <label>习惯名称<input id="cHName" placeholder="比如：每天喝水"></label>
       <label>积分奖励<input id="cHPoints" type="number" value="50" min="0"></label>
     </div>
+    <label style="display:block;margin-top:12px;font-size:13px;color:var(--ink-soft);font-family:'Baloo 2';font-weight:600">时间段（点选：早上/上午、中午、下午、晚上）</label>
+    <div class="slot-pick" id="cHabitSlotPick"></div>
     <label style="display:block;margin-top:12px;font-size:13px;color:var(--ink-soft);font-family:'Baloo 2';font-weight:600">选个图标（点一个，或自己加 emoji）</label>
     <div class="icon-pick" id="cHabitIconPick"></div>
     <div class="icon-pick-custom"><label>自己加一个 emoji<input id="cHIcon" placeholder="🌟" maxlength="2"></label></div>
@@ -1208,6 +1233,10 @@ function renderHabitMine(){
   HABIT_ICONS.forEach(ic=>{ const b=document.createElement('div'); b.className='chip'+(ic===selHabitIcon?' on':''); b.textContent=ic; b.title=ic;
     b.onclick=()=>{ selHabitIcon=ic; document.getElementById('cHIcon').value=''; Array.from(pick.children).forEach(c=>c.classList.remove('on')); b.classList.add('on'); };
     pick.appendChild(b); });
+  const slotPick=document.getElementById('cHabitSlotPick'); slotPick.innerHTML='';
+  HABIT_SLOTS.forEach(s=>{ const b=document.createElement('button'); b.type='button'; b.className='slot-chip'+(s.key===selHabitSlot?' on':''); b.textContent=s.ico+' '+s.label;
+    b.onclick=()=>{ selHabitSlot=s.key; Array.from(slotPick.children).forEach(c=>c.classList.remove('on')); b.classList.add('on'); };
+    slotPick.appendChild(b); });
   const list=document.getElementById('cHList'); list.innerHTML='';
   if(S.habits.length===0){ list.innerHTML='<div class="empty" style="padding:14px">还没有习惯，快添加一个吧～</div>'; }
   S.habits.forEach(h=>{
@@ -1226,10 +1255,10 @@ function addHabitChild(){
   if(!name){ toast('请填写习惯名称'); return; }
   if(editingHabitId){
     const h=S.habits.find(x=>x.id===editingHabitId);
-    if(h){ h.icon=icon; h.name=name; h.points=points; h.desc=desc; }
+    if(h){ h.icon=icon; h.name=name; h.points=points; h.desc=desc; h.slot=selHabitSlot; }
     editingHabitId=null;
   } else {
-    S.habits.push({ id:'h'+Date.now(), icon, name, desc, points, records:{} });
+    S.habits.push({ id:'h'+Date.now(), icon, name, desc, points, records:{}, slot:selHabitSlot });
   }
   save(); renderHabitMine(); toast('已保存 ⭐');
 }
@@ -1241,6 +1270,7 @@ function editHabitChild(id){
   document.getElementById('cHIcon').value='';
   document.getElementById('cHDesc').value=h.desc||'';
   selHabitIcon=h.icon;
+  selHabitSlot=h.slot||'morning';
   const pick=document.getElementById('cHabitIconPick');
   if(pick){ Array.from(pick.children).forEach(c=>c.classList.remove('on')); const idx=HABIT_ICONS.indexOf(h.icon); if(idx>=0 && pick.children[idx]) pick.children[idx].classList.add('on'); }
   renderHabitMine();
