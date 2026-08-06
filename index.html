@@ -230,6 +230,46 @@
   .h-btn.pending { background:#FFE9C7; color:#C8841B; cursor:default; }
   .h-btn.ok { background:#DCF3E8; color:var(--teal-d); cursor:default; }
 
+  /* ---------- Habit tabs / week-month / my habits ---------- */
+  .habit-tabs { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
+  .htab { border:none; background:#FFF; border-radius:16px; padding:10px 16px; font-family:inherit; font-size:15px; cursor:pointer; box-shadow:var(--shadow-sm); color:var(--ink-soft); border:2px solid #F0E6FF; transition:all .18s; }
+  .htab.on { background:linear-gradient(160deg,var(--teal),var(--teal-d)); color:#fff; border-color:transparent; transform:translateY(-1px); }
+  .goal-card { display:flex; gap:14px; align-items:center; background:linear-gradient(135deg,#FFF7E6,#FFE9F3); border-radius:22px; padding:16px 18px; box-shadow:var(--shadow-sm); border:3px solid #FFE3C7; margin-bottom:16px; }
+  .goal-card.month { background:linear-gradient(135deg,#E9F3FF,#EDE9FF); border-color:#D7E3FF; }
+  .goal-ico { font-size:40px; line-height:1; }
+  .goal-body { flex:1; }
+  .goal-t { font-size:18px; font-weight:700; }
+  .goal-sub { font-size:13px; color:var(--ink-soft); font-family:'Baloo 2',sans-serif; font-weight:600; margin:3px 0 8px; }
+  .goal-bar { height:12px; border-radius:8px; background:#ECE6F2; overflow:hidden; }
+  .goal-fill { height:100%; background:linear-gradient(90deg,var(--orange),var(--yellow)); transition:width .5s; }
+  .goal-card.month .goal-fill { background:linear-gradient(90deg,var(--blue),var(--purple)); }
+  .goal-stat { font-size:14px; margin-top:6px; color:var(--teal-d); font-weight:700; }
+  .cal-week { display:grid; grid-template-columns:repeat(7,1fr); gap:8px; }
+  .cal-day { background:#fff; border-radius:16px; padding:10px 4px; text-align:center; box-shadow:var(--shadow-sm); border:3px solid #EAF6F2; }
+  .cal-day.today { border-color:var(--orange); background:#FFF7EC; }
+  .cd-dow { font-size:13px; color:var(--teal-d); font-weight:700; }
+  .cd-date { font-size:12px; color:var(--ink-soft); font-family:'Baloo 2',sans-serif; font-weight:600; margin-bottom:6px; }
+  .cd-icos { font-size:20px; min-height:24px; line-height:1.2; word-break:break-all; }
+  .cd-rest { font-size:12px; color:#C9C2D6; }
+  .cd-num { font-size:12px; color:var(--ink-soft); margin-top:4px; font-family:'Baloo 2',sans-serif; font-weight:600; }
+  .cal-hint { font-size:13px; color:var(--ink-soft); font-family:'Baloo 2',sans-serif; font-weight:600; margin-top:12px; text-align:center; }
+  .cal-month { background:#fff; border-radius:22px; padding:14px; box-shadow:var(--shadow-sm); border:3px solid #EAF6F2; margin-bottom:14px; }
+  .cm-head { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; margin-bottom:8px; }
+  .cm-head span { text-align:center; font-size:13px; color:var(--teal-d); font-weight:700; }
+  .cm-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
+  .cm-cell { position:relative; aspect-ratio:1/1; border-radius:12px; background:#F7FAFF; display:flex; align-items:center; justify-content:center; font-size:15px; color:var(--ink); cursor:pointer; border:2px solid transparent; transition:all .15s; }
+  .cm-cell:hover { border-color:var(--teal); }
+  .cm-cell.out { background:transparent; color:#D5CEE0; cursor:default; }
+  .cm-cell.today { border-color:var(--orange); background:#FFF7EC; font-weight:700; }
+  .cm-dot { position:absolute; bottom:5px; left:50%; transform:translateX(-50%); background:var(--teal); color:#fff; font-size:11px; font-weight:700; border-radius:999px; padding:1px 7px; font-family:'Baloo 2',sans-serif; }
+  .month-detail { background:#FFF; border-radius:18px; padding:14px; box-shadow:var(--shadow-sm); border:3px solid #EAF6F2; margin-top:4px; }
+  .md-empty { color:var(--ink-soft); font-size:14px; text-align:center; }
+  .md-title { font-size:15px; font-weight:700; margin-bottom:8px; }
+  .md-chip { display:inline-flex; align-items:center; gap:4px; background:#EAF6F2; border-radius:12px; padding:5px 10px; margin:3px; font-size:14px; }
+  .habit-edit-card .icon-pick { margin-top:8px; }
+  .icon-pick-custom { margin-top:10px; }
+  .icon-pick-custom input { width:80px; font-size:18px; text-align:center; }
+
   /* ---------- Errors ---------- */
   .err-card { background:#fff; border-radius:22px; padding:18px 22px; box-shadow:var(--shadow-sm); margin-bottom:14px; border:3px solid #FFE0E0; }
   .err-card .e-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
@@ -533,8 +573,17 @@
       <!-- HABITS -->
       <section id="screen-habit" class="screen">
         <h2 class="page-title">⭐ 习惯打卡</h2>
-        <p class="page-sub">做完好事就点「申请打卡」，等爸爸妈妈确认后就能拿到积分哦～</p>
-        <div id="habitList"></div>
+        <p class="page-sub">养成好习惯，每天进步一点点～ 完成的内容在「本周 / 本月」里都能看到哦！</p>
+        <div class="habit-tabs">
+          <button class="htab on" data-htab="today" onclick="switchHabitTab('today')">📅 今日</button>
+          <button class="htab" data-htab="week" onclick="switchHabitTab('week')">🗓️ 本周</button>
+          <button class="htab" data-htab="month" onclick="switchHabitTab('month')">📆 本月</button>
+          <button class="htab" data-htab="mine" onclick="switchHabitTab('mine')">⭐ 我的</button>
+        </div>
+        <div id="habitToday"></div>
+        <div id="habitWeek" style="display:none"></div>
+        <div id="habitMonth" style="display:none"></div>
+        <div id="habitMine" style="display:none"></div>
       </section>
 
       <!-- ERRORS -->
@@ -613,11 +662,12 @@ const defaultState = {
   pet: { name:'豆豆', type:'chick', level:3, exp:45, expMax:100, satiety:70 },
   streak: 5,
   habits: [
-    { id:'h1', icon:'🌅', name:'早起刷牙', desc:'每天 7:30 前起床', status:'ok' },
-    { id:'h2', icon:'📖', name:'亲子阅读', desc:'读 15 分钟课外书', status:'pending' },
-    { id:'h3', icon:'🏃', name:'户外运动', desc:'跳绳 / 跑步 20 分钟', status:'todo' },
-    { id:'h4', icon:'🧹', name:'整理书桌', desc:'自己收拾学习角', status:'todo' },
+    { id:'h1', icon:'🌅', name:'早起刷牙', desc:'每天 7:30 前起床', records:{} },
+    { id:'h2', icon:'📖', name:'亲子阅读', desc:'读 15 分钟课外书', records:{} },
+    { id:'h3', icon:'🏃', name:'户外运动', desc:'跳绳 / 跑步 20 分钟', records:{} },
+    { id:'h4', icon:'🧹', name:'整理书桌', desc:'自己收拾学习角', records:{} },
   ],
+  goals: { weekly:{target:0,reward:'',points:0}, monthly:{target:0,reward:'',points:0} },
   tasks: [
     { id:'t1', ico:'🔤', name:'英语字母复习', due:'今天到期', done:false, target:'study' },
     { id:'t2', ico:'➕', name:'口算 10 以内', due:'今天到期', done:false, target:'study' },
@@ -644,6 +694,8 @@ const defaultState = {
 let S = load();
 if(!S.pet) S.pet = structuredClone(defaultState).pet;
 if(!S.pet.type) S.pet.type='chick';
+if(!S.goals) S.goals = { weekly:{target:0,reward:'',points:0}, monthly:{target:0,reward:'',points:0} };
+S.habits.forEach(h=>{ if(!h.records) h.records={}; });
 /* 习惯打卡预设图标（适合小学生日常习惯） */
 const HABIT_ICONS = ['💧','🦷','🛏️','📚','🏃','🥗','✋','🧹','🎒','🐶','🧘','💊','🌿','✏️','🎵','🚿','🤝','🌞','🍎','⚽','🧦','💤','📝','🌟','❤️','🔥','👟','🧼'];
 let selHabitIcon = '🌟';
@@ -977,22 +1029,186 @@ function renderSummary(){
 }
 
 /* ---------------- Habits ---------------- */
+function escapeHtml(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function todayKey(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function dateAdd(d,n){ const x=new Date(d); x.setDate(x.getDate()+n); return x; }
+function keyOf(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function weekMonday(d){ const x=new Date(d); const day=(x.getDay()+6)%7; return dateAdd(x,-day); }
+function weekDays(ref){ const mon=weekMonday(ref); const arr=[]; for(let i=0;i<7;i++) arr.push(dateAdd(mon,i)); return arr; }
+function monthMatrix(ref){ const start=weekMonday(new Date(ref.getFullYear(),ref.getMonth(),1)); const arr=[]; for(let i=0;i<42;i++) arr.push(dateAdd(start,i)); return arr; }
+const WEEK_CN=['一','二','三','四','五','六','日'];
+function habitRec(h,key){ return h.records ? h.records[key] : undefined; }
+function doneHabitsOn(key){ return S.habits.filter(h=>habitRec(h,key)==='ok'); }
+function countDoneInRange(days){ const set=new Set(days.map(keyOf)); let c=0; S.habits.forEach(h=>{ if(!h.records) return; Object.keys(h.records).forEach(k=>{ if(set.has(k) && h.records[k]==='ok') c++; }); }); return c; }
+
+let habitTab='today';
 function renderHabits(){
-  const l=$('#habitList'); l.innerHTML='';
+  if(habitTab==='today') renderHabitToday();
+  else if(habitTab==='week') renderHabitWeek();
+  else if(habitTab==='month') renderHabitMonth();
+  else renderHabitMine();
+}
+function switchHabitTab(t){
+  habitTab=t;
+  document.querySelectorAll('.htab').forEach(b=>b.classList.toggle('on', b.dataset.htab===t));
+  document.getElementById('habitToday').style.display = t==='today'?'block':'none';
+  document.getElementById('habitWeek').style.display  = t==='week'?'block':'none';
+  document.getElementById('habitMonth').style.display = t==='month'?'block':'none';
+  document.getElementById('habitMine').style.display  = t==='mine'?'block':'none';
+  renderHabits();
+}
+function renderHabitToday(){
+  const l=$('#habitToday'); l.innerHTML='';
+  const tk=todayKey();
+  if(S.habits.length===0){ l.innerHTML='<div class="empty">还没有习惯，去「⭐ 我的」添加一个吧～</div>'; return; }
   S.habits.forEach(h=>{
-    const d=document.createElement('div'); d.className='habit';
+    const rec=habitRec(h,tk);
     let btn;
-    if(h.status==='ok') btn=`<button class="h-btn ok">✓ 已确认 +${h.points||50}</button>`;
-    else if(h.status==='pending') btn=`<button class="h-btn pending">⏳ 待家长确认</button>`;
+    if(rec==='ok') btn=`<button class="h-btn ok">✓ 已确认 +${h.points||50}</button>`;
+    else if(rec==='pending') btn=`<button class="h-btn pending">⏳ 待家长确认</button>`;
     else btn=`<button class="h-btn apply" onclick="applyHabit('${h.id}')">申请打卡</button>`;
+    const d=document.createElement('div'); d.className='habit';
     d.innerHTML=`<div class="h-ico">${h.icon}</div><div class="h-info"><div class="h-name">${h.name}</div><div class="h-desc">${h.desc}</div></div>${btn}`;
     l.appendChild(d);
   });
 }
+function goalCard(g, emoji, label){
+  const done = label==='week' ? window.__habitDoneCache : window.__habitDoneCache;
+  const pct = g.target ? Math.min(100, Math.round(done/g.target*100)) : 0;
+  const reached = g.target && done>=g.target;
+  return `<div class="goal-card${label==='month'?' month':''}">
+    <div class="goal-ico">${emoji}</div>
+    <div class="goal-body">
+      <div class="goal-t">${label==='week'?'本周':'本月'}奖励${g.reward?('：'+escapeHtml(g.reward)):''}</div>
+      <div class="goal-sub">目标：完成 ${g.target||0} 次打卡${g.points?(' ＋ '+g.points+' 积分'):''}</div>
+      <div class="goal-bar"><div class="goal-fill" style="width:${pct}%"></div></div>
+      <div class="goal-stat">${reached?'🎉 已达成，奖励到手！':('已完成 '+done+' / '+(g.target||0)+' 次')}</div>
+    </div></div>`;
+}
+function renderHabitWeek(){
+  const w=$('#habitWeek'); const days=weekDays(new Date());
+  window.__habitDoneCache = countDoneInRange(days);
+  let html = goalCard(S.goals.weekly, '🎁', 'week');
+  html += '<div class="cal-week">';
+  days.forEach(d=>{
+    const k=keyOf(d); const list=doneHabitsOn(k);
+    const dow=WEEK_CN[(d.getDay()+6)%7];
+    const isToday = keyOf(d)===todayKey();
+    html += `<div class="cal-day${isToday?' today':''}">
+      <div class="cd-dow">周${dow}</div>
+      <div class="cd-date">${d.getMonth()+1}/${d.getDate()}</div>
+      <div class="cd-icos">${list.length?list.map(h=>h.icon).join(''):'<span class="cd-rest">休息</span>'}</div>
+      <div class="cd-num">${list.length?list.length+' 个':'—'}</div>
+    </div>`;
+  });
+  html += '</div>';
+  html += '<div class="cal-hint">👆 点「📅 今日」给习惯打卡，这里就能看到每天完成了哪些～</div>';
+  w.innerHTML = html;
+}
+function renderHabitMonth(){
+  const m=$('#habitMonth'); const ref=new Date(); const matrix=monthMatrix(ref);
+  const y=ref.getFullYear(), mo=ref.getMonth(); let done=0;
+  S.habits.forEach(h=>{ if(!h.records) return; Object.keys(h.records).forEach(k=>{ if(h.records[k]==='ok'){ const p=k.split('-'); if(+p[0]===y && (+p[1]-1)===mo) done++; } }); });
+  window.__habitDoneCache = done;
+  let html = goalCard(S.goals.monthly, '🏆', 'month');
+  html += '<div class="cal-month"><div class="cm-head">'+WEEK_CN.map(w=>'<span>周'+w+'</span>').join('')+'</div><div class="cm-grid">';
+  matrix.forEach(d=>{
+    const inMonth = d.getMonth()===ref.getMonth();
+    const k=keyOf(d); const list=doneHabitsOn(k);
+    const isToday = keyOf(d)===todayKey();
+    html += `<div class="cm-cell${inMonth?'':' out'}${isToday?' today':''}" onclick="showDayDetail('${k}')">
+      <div class="cm-d">${d.getDate()}</div>${list.length?`<div class="cm-dot">${list.length}</div>`:''}
+    </div>`;
+  });
+  html += '</div></div><div id="monthDetail" class="month-detail"></div>';
+  m.innerHTML = html;
+}
+function showDayDetail(k){
+  const el=document.getElementById('monthDetail'); if(!el) return;
+  const list=doneHabitsOn(k);
+  if(!list.length){ el.innerHTML='<div class="md-empty">这一天还没有打卡记录～</div>'; return; }
+  el.innerHTML='<div class="md-title">📌 '+k+' 完成了：</div>'+list.map(h=>`<span class="md-chip">${h.icon} ${escapeHtml(h.name)}</span>`).join('');
+}
+function renderHabitMine(){
+  const el=$('#habitMine');
+  el.innerHTML=`<div class="card habit-edit-card">
+    <h3 style="margin-top:0">➕ ${editingHabitId?'编辑习惯':'添加我的习惯'}</h3>
+    <div class="form-grid">
+      <label>习惯名称<input id="cHName" placeholder="比如：每天喝水"></label>
+      <label>积分奖励<input id="cHPoints" type="number" value="50" min="0"></label>
+    </div>
+    <label style="display:block;margin-top:12px;font-size:13px;color:var(--ink-soft);font-family:'Baloo 2';font-weight:600">选个图标（点一个，或自己加 emoji）</label>
+    <div class="icon-pick" id="cHabitIconPick"></div>
+    <div class="icon-pick-custom"><label>自己加一个 emoji<input id="cHIcon" placeholder="🌟" maxlength="2"></label></div>
+    <label style="display:block;margin-top:12px;font-size:13px;color:var(--ink-soft);font-family:'Baloo 2';font-weight:600">描述（可选）</label>
+    <textarea class="field" id="cHDesc" rows="2" placeholder="比如：每天喝 5 杯水"></textarea>
+    <button class="btn-primary" style="margin-top:14px" onclick="addHabitChild()">${editingHabitId?'保存修改':'添加到我的习惯'}</button>
+    ${editingHabitId?'<button class="btn-ghost" style="margin-top:14px;margin-left:10px" onclick="cancelEditHabit()">取消</button>':''}
+  </div>
+  <div class="card" style="margin-top:16px">
+    <h3 style="margin-top:0">⭐ 我的习惯（<span id="cHCount">0</span>）</h3>
+    <div id="cHList"></div>
+  </div>`;
+  const pick=document.getElementById('cHabitIconPick'); pick.innerHTML='';
+  HABIT_ICONS.forEach(ic=>{ const b=document.createElement('div'); b.className='chip'+(ic===selHabitIcon?' on':''); b.textContent=ic; b.title=ic;
+    b.onclick=()=>{ selHabitIcon=ic; document.getElementById('cHIcon').value=''; Array.from(pick.children).forEach(c=>c.classList.remove('on')); b.classList.add('on'); };
+    pick.appendChild(b); });
+  const list=document.getElementById('cHList'); list.innerHTML='';
+  if(S.habits.length===0){ list.innerHTML='<div class="empty" style="padding:14px">还没有习惯，快添加一个吧～</div>'; }
+  S.habits.forEach(h=>{
+    const d=document.createElement('div'); d.className='cq-item';
+    d.innerHTML=`<span style="font-size:22px">${h.icon}</span><span style="flex:1">${h.name} <span style="color:var(--ink-soft)">+${h.points||50}分</span></span><button class="del" onclick="editHabitChild('${h.id}')">编辑</button><button class="del" onclick="delHabitChild('${h.id}')">删除</button>`;
+    list.appendChild(d);
+  });
+  document.getElementById('cHCount').textContent=S.habits.length;
+}
+function addHabitChild(){
+  const custom=document.getElementById('cHIcon').value.trim();
+  const icon=custom || selHabitIcon || '🌟';
+  const name=document.getElementById('cHName').value.trim();
+  const points=parseInt(document.getElementById('cHPoints').value)||50;
+  const desc=document.getElementById('cHDesc').value.trim()||'好习惯，要坚持';
+  if(!name){ toast('请填写习惯名称'); return; }
+  if(editingHabitId){
+    const h=S.habits.find(x=>x.id===editingHabitId);
+    if(h){ h.icon=icon; h.name=name; h.points=points; h.desc=desc; }
+    editingHabitId=null;
+  } else {
+    S.habits.push({ id:'h'+Date.now(), icon, name, desc, points, records:{} });
+  }
+  save(); renderHabitMine(); toast('已保存 ⭐');
+}
+function editHabitChild(id){
+  const h=S.habits.find(x=>x.id===id); if(!h) return;
+  editingHabitId=id;
+  document.getElementById('cHName').value=h.name;
+  document.getElementById('cHPoints').value=h.points||50;
+  document.getElementById('cHIcon').value='';
+  document.getElementById('cHDesc').value=h.desc||'';
+  selHabitIcon=h.icon;
+  const pick=document.getElementById('cHabitIconPick');
+  if(pick){ Array.from(pick.children).forEach(c=>c.classList.remove('on')); const idx=HABIT_ICONS.indexOf(h.icon); if(idx>=0 && pick.children[idx]) pick.children[idx].classList.add('on'); }
+  renderHabitMine();
+}
+function cancelEditHabit(){ editingHabitId=null; renderHabitMine(); }
+function delHabitChild(id){ S.habits=S.habits.filter(x=>x.id!==id); save(); renderHabitMine(); }
+let editingHabitId=null;
+
 function applyHabit(id){
-  const h=S.habits.find(x=>x.id===id); if(!h||h.status!=='todo') return;
-  h.status='pending'; S.points+=(h.points||50); save(); renderHabits(); renderTop();
-  toast(`已通知爸爸妈妈，确认后 +${h.points||50} 积分 🪙`);
+  const h=S.habits.find(x=>x.id===id); if(!h) return;
+  const tk=todayKey();
+  if(habitRec(h,tk)==='ok' || habitRec(h,tk)==='pending') return;
+  if(!h.records) h.records={};
+  h.records[tk]='pending'; save(); renderHabits();
+  toast('已通知爸爸妈妈，确认后就能拿到积分 🪙');
+}
+function confirmHabit(id){
+  const h=S.habits.find(x=>x.id===id); if(!h) return;
+  const tk=todayKey();
+  if(!h.records) h.records={};
+  if(h.records[tk]!=='ok'){ h.records[tk]='ok'; S.points+=(h.points||50); }
+  save(); renderParent(); renderTop(); renderHabits();
+  toast('✅ 已确认，+'+ (h.points||50) +' 积分');
 }
 
 /* ---------------- Errors ---------------- */
@@ -1692,6 +1908,23 @@ function habitsHTML(){
     <button class="btn-primary" style="margin-top:14px" onclick="addHabit()">添加到孩子端</button>
   </div>
   <div class="card" style="margin-top:16px">
+    <h3 style="margin-top:0">🎁 每周 / 每月奖励设置</h3>
+    <p style="font-size:13px;color:var(--ink-soft);margin-top:0">设置每周、每月的打卡目标，达成后孩子就能在「本周 / 本月」里看到奖励进度，确认打卡时积分自动发放。</p>
+    <div class="form-grid">
+      <label>每周目标次数<input id="wTarget" type="number" min="0" value="0"></label>
+      <label>每周奖励说明<input id="wReward" placeholder="比如：周末去公园玩"></label>
+    </div>
+    <div class="form-grid">
+      <label>每周奖励积分<input id="wPoints" type="number" min="0" value="0"></label>
+      <label>每月目标次数<input id="mTarget" type="number" min="0" value="0"></label>
+    </div>
+    <div class="form-grid">
+      <label>每月奖励说明<input id="mReward" placeholder="比如：买一本喜欢的绘本"></label>
+      <label>每月奖励积分<input id="mPoints" type="number" min="0" value="0"></label>
+    </div>
+    <button class="btn-primary" style="margin-top:14px" onclick="saveGoals()">保存奖励设置</button>
+  </div>
+  <div class="card" style="margin-top:16px">
     <h3 style="margin-top:0">📋 当前习惯（<span id="hCount">0</span>）</h3>
     <div id="hList"></div>
   </div>`;
@@ -1706,11 +1939,20 @@ function wireHabits(){
       pick.appendChild(b);
     });
   }
+  if($('#wTarget')){
+    $('#wTarget').value=S.goals.weekly.target||0; $('#wReward').value=S.goals.weekly.reward||'';
+    $('#wPoints').value=S.goals.weekly.points||0; $('#mTarget').value=S.goals.monthly.target||0;
+    $('#mReward').value=S.goals.monthly.reward||''; $('#mPoints').value=S.goals.monthly.points||0;
+  }
   const list=$('#hList'); list.innerHTML='';
   if(S.habits.length===0){ list.innerHTML=`<div class="empty" style="padding:14px">还没有习惯，快添加一个吧～</div>`; }
+  const tk=todayKey();
   S.habits.forEach((h,i)=>{
     const d=document.createElement('div'); d.className='cq-item';
-    d.innerHTML=`<span style="font-size:22px">${h.icon}</span><span style="flex:1">${h.name} <span style="color:var(--ink-soft)">+${h.points||50}分</span></span><button class="del" onclick="delHabit(${i})">删除</button>`;
+    const pend = h.records && h.records[tk]==='pending';
+    d.innerHTML=`<span style="font-size:22px">${h.icon}</span><span style="flex:1">${h.name} <span style="color:var(--ink-soft)">+${h.points||50}分</span>${pend?'<b style="color:var(--orange)"> · 今日待确认</b>':''}</span>` +
+      (pend?`<button class="del" style="background:#E6F0FF;color:#3B82C4" onclick="confirmHabit('${h.id}')">确认</button>`:'') +
+      `<button class="del" onclick="delHabit(${i})">删除</button>`;
     list.appendChild(d);
   });
   $('#hCount').textContent=S.habits.length;
@@ -1722,10 +1964,15 @@ function addHabit(){
   const points=parseInt($('#hPoints').value)||50;
   const desc=$('#hDesc').value.trim()||'好习惯，要坚持';
   if(!name){ toast('请填写习惯名称'); return; }
-  S.habits.push({ id:'h'+Date.now(), icon, name, desc, points, status:'todo' });
+  S.habits.push({ id:'h'+Date.now(), icon, name, desc, points, records:{} });
   save(); renderParent(); toast('已添加到孩子端 ⭐');
 }
 function delHabit(i){ S.habits.splice(i,1); save(); renderParent(); }
+function saveGoals(){
+  S.goals.weekly = { target:parseInt($('#wTarget').value)||0, reward:$('#wReward').value.trim(), points:parseInt($('#wPoints').value)||0 };
+  S.goals.monthly = { target:parseInt($('#mTarget').value)||0, reward:$('#mReward').value.trim(), points:parseInt($('#mPoints').value)||0 };
+  save(); renderParent(); toast('奖励设置已保存 🎁');
+}
 
 /* ---------------- 孩子管理（家长端编辑孩子信息） ---------------- */
 function bookOptions(sel){
